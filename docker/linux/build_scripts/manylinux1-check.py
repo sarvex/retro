@@ -38,16 +38,12 @@ def have_compatible_glibc(major, minimum_minor):
     # Parse string and check against requested version.
     version = [int(piece) for piece in version_str.split(".")]
     assert len(version) == 2
-    if major != version[0]:
-        return False
-    if minimum_minor > version[1]:
-        return False
-    return True
+    return False if major != version[0] else minimum_minor <= version[1]
 
 import sys
 if is_manylinux1_compatible():
-    print("%s is manylinux1 compatible" % (sys.executable,))
+    print(f"{sys.executable} is manylinux1 compatible")
     sys.exit(0)
 else:
-    print("%s is NOT manylinux1 compatible" % (sys.executable,))
+    print(f"{sys.executable} is NOT manylinux1 compatible")
     sys.exit(1)

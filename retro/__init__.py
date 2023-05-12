@@ -31,14 +31,14 @@ def get_romfile_system(rom_path):
     if extension in retro.data.EMU_EXTENSIONS:
         return retro.data.EMU_EXTENSIONS[extension]
     else:
-        raise Exception("Unsupported rom type at path: {}".format(rom_path))
+        raise Exception(f"Unsupported rom type at path: {rom_path}")
 
 
 def get_system_info(system):
     if system in retro.data.EMU_INFO:
         return retro.data.EMU_INFO[system]
     else:
-        raise KeyError("Unsupported system type: {}".format(system))
+        raise KeyError(f"Unsupported system type: {system}")
 
 
 def make(game, state=State.DEFAULT, inttype=retro.data.Integrations.DEFAULT, **kwargs):
@@ -51,5 +51,7 @@ def make(game, state=State.DEFAULT, inttype=retro.data.Integrations.DEFAULT, **k
         if not retro.data.get_file_path(game, "rom.sha", inttype):
             raise
         else:
-            raise FileNotFoundError('Game not found: %s. Did you make sure to import the ROM?' % game)
+            raise FileNotFoundError(
+                f'Game not found: {game}. Did you make sure to import the ROM?'
+            )
     return RetroEnv(game, state, inttype=inttype, **kwargs)

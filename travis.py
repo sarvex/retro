@@ -38,9 +38,9 @@ def get_bucket():
 def upload_to_gcs(patterns, dest):
     bucket = get_bucket()
     for pattern in patterns:
-        print('uploading %s to %s' % (pattern, dest), flush=True)
+        print(f'uploading {pattern} to {dest}', flush=True)
         for filepath in glob.glob(pattern):
-            blob_name = '%s/%s' % (dest, os.path.basename(filepath))
+            blob_name = f'{dest}/{os.path.basename(filepath)}'
             blob = bucket.blob(blob_name)
             blob.upload_from_filename(filename=filepath)
             blob.make_public()
@@ -52,8 +52,7 @@ def test():
     import retro.testing as testdata
     args = []
     if os.environ['TRAVIS_BRANCH'] != 'master' or os.environ['TRAVIS_PULL_REQUEST'] != 'false':
-        check = testdata.branch_new('origin/master')
-        if check:
+        if check := testdata.branch_new('origin/master'):
             args.extend(['-k', ' or '.join(check)])
     pytest.main(args)
     return not testdata.errors
@@ -64,18 +63,25 @@ def main():
     cross = os.environ.get('CROSS')
     bdist_options = []
     with Fold('script.build', 'Building'):
-        if os_name == 'osx':
-            cmake_options = ['-DCMAKE_PREFIX_PATH=/usr/local/opt/qt', '-DBUILD_UI=ON']
-        elif os_name == 'linux':
+        if os_name == 'linux':
             include_suffix = "m" if float(os.environ['PYVER']) < 3.8 else ""
-            cmake_options = ['-DBUILD_MANYLINUX=ON',
-                             '-DPYTHON_INCLUDE_DIR=%s/include/python%s%s' % (sys.base_prefix, os.environ['PYVER'], include_suffix)]
-            if cross in ('win32', 'win64'):
-                cmake_options = ['-DCMAKE_TOOLCHAIN_FILE=docker/cmake/%s.cmake' % cross, '-DBUILD_UI=ON']
+            cmake_options = (
+                [
+                    f'-DCMAKE_TOOLCHAIN_FILE=docker/cmake/{cross}.cmake',
+                    '-DBUILD_UI=ON',
+                ]
+                if cross in ('win32', 'win64')
+                else [
+                    '-DBUILD_MANYLINUX=ON',
+                    f"-DPYTHON_INCLUDE_DIR={sys.base_prefix}/include/python{os.environ['PYVER']}{include_suffix}",
+                ]
+            )
             if cross == 'win32':
                 bdist_options = ['--plat-name', 'win32']
-            if cross == 'win64':
+            elif cross == 'win64':
                 bdist_options = ['--plat-name', 'win_amd64']
+        elif os_name == 'osx':
+            cmake_options = ['-DCMAKE_PREFIX_PATH=/usr/local/opt/qt', '-DBUILD_UI=ON']
         else:
             raise Exception('unrecognized os name')
 
@@ -92,7 +98,7 @@ def main():
             if os.environ['TRAVIS_BRANCH'] == 'master':
                 upload_dir = 'builds'
             else:
-                upload_dir = 'builds/%s' % os.environ['TRAVIS_BRANCH']
+                upload_dir = f"builds/{os.environ['TRAVIS_BRANCH']}"
             if os_name == 'osx' or cross in ('win32', 'win64'):
                 # package the UI for uploading
                 call(['cpack'])
@@ -101,7 +107,7 @@ def main():
                 for filepath in glob.glob('Gym Retro-*.*'):
                     basename = os.path.basename(filepath)
                     m = re.match(r'Gym Retro-.*-([^-]+)', basename)
-                    new_basename = 'Gym Retro-latest-' + m.group(1)
+                    new_basename = f'Gym Retro-latest-{m[1]}'
                     new_filepath = os.path.join(os.path.dirname(filepath), new_basename)
                     shutil.copy(filepath, new_filepath)
                 upload_to_gcs(['Gym Retro-*.*'], upload_dir)

@@ -9,7 +9,7 @@ with pytest.suppress(ImportError):
 def test_vector_int():
     v_int = m.VectorInt([0, 0])
     assert len(v_int) == 2
-    assert bool(v_int) is True
+    assert bool(v_int)
 
     v_int2 = m.VectorInt([0, 0])
     assert v_int == v_int2
@@ -153,11 +153,8 @@ def test_noncopyable_containers():
     for i in range(0, 5):
         assert dnc[i].value == i + 1
 
-    i = 1
-    for j in dnc:
+    for i, j in enumerate(dnc, start=1):
         assert(j.value == i)
-        i += 1
-
     # std::map
     mnc = m.get_mnc(5)
     for i in range(1, 6):

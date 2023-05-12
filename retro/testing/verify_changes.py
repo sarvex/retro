@@ -11,8 +11,7 @@ elif len(sys.argv) == 3:
 else:
     branches = ['master']
 
-check = testdata.branch_new(*branches)
-if check:
+if check := testdata.branch_new(*branches):
     args = ['-q', '--tb=no', '--disable-warnings', '-k', ' or '.join(check)]
     pytest.main(args)
     for context, error in testdata.errors:

@@ -50,10 +50,10 @@ def state(game, inttype):
     emu = retro.RetroEmulator(rom)
     for statefile in states:
         try:
-            with gzip.open(retro.data.get_file_path(game, statefile + '.state', inttype), 'rb') as fh:
+            with gzip.open(retro.data.get_file_path(game, f'{statefile}.state', inttype), 'rb') as fh:
                 state = fh.read()
         except (IOError, zlib.error):
-            errors.append((game, 'state failed to decode: %s' % statefile))
+            errors.append((game, f'state failed to decode: {statefile}'))
             continue
 
         emu.set_state(state)

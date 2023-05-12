@@ -15,13 +15,13 @@ for g in games:
         all_games.append(g)
         overlays += 1
     if os.path.exists(os.path.join(retro.data.path(), *retro.data.Integrations.EXPERIMENTAL_ONLY.paths, g)):
-        all_games.append(g + '-exp')
+        all_games.append(f'{g}-exp')
         overlays += 1
     if os.path.exists(os.path.join(retro.data.path(), *retro.data.Integrations.CONTRIB_ONLY.paths, g)):
-        all_games.append(g + '-contrib')
+        all_games.append(f'{g}-contrib')
         overlays += 1
     if overlays > 1:
-        all_games.append(g + '-all')
+        all_games.append(f'{g}-all')
 
 inttypes = {
     'exp': retro.data.Integrations.EXPERIMENTAL_ONLY,
@@ -33,7 +33,10 @@ inttypes = {
 @pytest.fixture(params=[g.replace('-', '_') for g in all_games])
 def game(request):
     game = request.param.split('_')
-    return '%s-%s' % (game[0], game[1]), inttypes[game[2]] if len(game) > 2 else retro.data.Integrations.STABLE
+    return (
+        f'{game[0]}-{game[1]}',
+        inttypes[game[2]] if len(game) > 2 else retro.data.Integrations.STABLE,
+    )
 
 
 def error(test, info):
@@ -43,7 +46,7 @@ def error(test, info):
 
 def warn(test, info):
     global warnings
-    w.warn('%s: %s' % (test, info))
+    w.warn(f'{test}: {info}')
     warnings.append((test, info))
 
 

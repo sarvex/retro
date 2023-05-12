@@ -26,7 +26,7 @@ class CinemaTest(object):
         self.tests = {}
 
     def __repr__(self):
-        return '<%s %s>' % (self.__class__.__name__, self.name)
+        return f'<{self.__class__.__name__} {self.name}>'
 
     def setUp(self):
         results = [f for f in glob.glob(os.path.join(self.path, 'test.*')) if re.search(self.TEST, f)]

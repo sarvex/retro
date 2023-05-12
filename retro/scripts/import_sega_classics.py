@@ -18,8 +18,7 @@ def main():
     if password:
         password = password + '\n'
 
-        authcode = input('Steam Guard code: ')
-        if authcode:
+        if authcode := input('Steam Guard code: '):
             password = password + authcode + '\n'
         else:
             password = password + '\r\n'
@@ -37,7 +36,7 @@ def main():
             r = requests.get('https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip')
             steamcmd = 'steamcmd.exe'
         else:
-            raise RuntimeError('Unknown platform %s' % sys.platform)
+            raise RuntimeError(f'Unknown platform {sys.platform}')
         if sys.platform.startswith('win'):
             zipf = zipfile.ZipFile(io.BytesIO(r.content))
             zipf.extractall(dir)

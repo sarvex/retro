@@ -82,9 +82,7 @@ class Interactive(abc.ABC):
         # cap the number of frames rendered so we don't just spend forever trying to catch up on frames
         # if rendering is slow
         max_dt = self._max_sim_frames_per_update / self._tps
-        if dt > max_dt:
-            dt = max_dt
-
+        dt = min(dt, max_dt)
         # catch up the simulation to the current time
         self._current_time += dt
         while self._sim_time < self._current_time:
@@ -110,10 +108,11 @@ class Interactive(abc.ABC):
 
             keys = []
             for keycode in inputs:
-                for name in dir(keycodes):
-                    if getattr(keycodes, name) == keycode:
-                        keys.append(name)
-
+                keys.extend(
+                    name
+                    for name in dir(keycodes)
+                    if getattr(keycodes, name) == keycode
+                )
             act = self.keys_to_act(keys)
 
             if not self._sync or act is not None:

@@ -33,10 +33,13 @@ def ingestDirectory(path, dest):
                 pass
 
             if ext in ('.gb', '.sym'):
-                shutil.copy(os.path.join(path, root, file), os.path.join(dest, root, fname, 'test' + ext))
+                shutil.copy(
+                    os.path.join(path, root, file),
+                    os.path.join(dest, root, fname, f'test{ext}'),
+                )
 
             for suffix, model in suffixes.items():
-                if fname.endswith('-' + suffix):
+                if fname.endswith(f'-{suffix}'):
                     manifest = {}
                     try:
                         with open(os.path.join(dest, root, fname, 'manifest.yml'), 'r') as f:

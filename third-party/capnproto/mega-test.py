@@ -55,7 +55,7 @@ class Test:
     flags = fcntl(fd, F_GETFL)
     fcntl(fd, F_SETFL, flags | os.O_NONBLOCK)
     poller.register(self.proc.stdout, POLLIN)
-    self.log = open("/tmp/test-output/" + self.name + ".log", "w")
+    self.log = open(f"/tmp/test-output/{self.name}.log", "w")
 
   def update(self):
     try:

@@ -23,10 +23,7 @@ else:
         return version_file
 
     def local_scheme(version):
-        v = ''
-        if version.distance:
-            v = '+' + version.node
-        return v
+        return f'+{version.node}' if version.distance else ''
     use_scm_version = {'write_to': 'retro/VERSION.txt',
                        'version_scheme': version_scheme,
                        'local_scheme': local_scheme}
@@ -35,15 +32,10 @@ else:
 class CMakeBuild(build_ext):
     def run(self):
         suffix = super(CMakeBuild, self).get_ext_filename('')
-        pyext_suffix = '-DPYEXT_SUFFIX:STRING=%s' % suffix
-        pylib_dir = ''
-        if not self.inplace:
-            pylib_dir = '-DPYLIB_DIRECTORY:PATH=%s' % self.build_lib
-        if self.debug:
-            build_type = '-DCMAKE_BUILD_TYPE=Debug'
-        else:
-            build_type = ''
-        python_executable = '-DPYTHON_EXECUTABLE:STRING=%s' % sys.executable
+        pyext_suffix = f'-DPYEXT_SUFFIX:STRING={suffix}'
+        pylib_dir = '' if self.inplace else f'-DPYLIB_DIRECTORY:PATH={self.build_lib}'
+        build_type = '-DCMAKE_BUILD_TYPE=Debug' if self.debug else ''
+        python_executable = f'-DPYTHON_EXECUTABLE:STRING={sys.executable}'
         cmake_exe = find_executable('cmake')
         if not cmake_exe:
             try:
@@ -58,13 +50,27 @@ class CMakeBuild(build_ext):
         else:
             import multiprocessing
             jobs = '-j%d' % multiprocessing.cpu_count()
-        make_exe = find_executable('make')
-        if not make_exe:
+        if make_exe := find_executable('make'):
+            subprocess.check_call([make_exe, jobs, 'retro'])
+        else:
             raise RuntimeError('Could not find Make executable. Is it installed?')
-        subprocess.check_call([make_exe, jobs, 'retro'])
 
 
-platform_globs = ['*-%s/*' % plat for plat in ['Nes', 'Snes', 'Genesis', 'Atari2600', 'GameBoy', 'Sms', 'GameGear', 'PCEngine', 'GbColor', 'GbAdvance']]
+platform_globs = [
+    f'*-{plat}/*'
+    for plat in [
+        'Nes',
+        'Snes',
+        'Genesis',
+        'Atari2600',
+        'GameBoy',
+        'Sms',
+        'GameGear',
+        'PCEngine',
+        'GbColor',
+        'GbAdvance',
+    ]
+]
 
 kwargs = {}
 if tuple(int(v) for v in setuptools_version.split('.')[:3]) >= (24, 2, 0):

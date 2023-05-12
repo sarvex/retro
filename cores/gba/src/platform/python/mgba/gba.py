@@ -106,9 +106,7 @@ class GBASIOJOYDriver(GBASIODriver):
             pass
 
         outlen = lib.GBASIOJOYSendCommand(self._native, cmd, buffer)
-        if outlen > 0 and outlen <= 5:
-            return bytes(buffer[0:outlen])
-        return None
+        return bytes(buffer[:outlen]) if outlen > 0 and outlen <= 5 else None
 
 class GBAMemory(Memory):
     def __init__(self, core, romSize=lib.SIZE_CART0):

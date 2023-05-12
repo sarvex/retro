@@ -68,7 +68,7 @@ class RetroEnv(gym.Env):
             # assume it's a path
             info_path = info
         else:
-            info_path = retro.data.get_file_path(game, info + '.json', inttype)
+            info_path = retro.data.get_file_path(game, f'{info}.json', inttype)
 
         if scenario is None:
             scenario = 'scenario'
@@ -77,7 +77,7 @@ class RetroEnv(gym.Env):
             # assume it's a path
             scenario_path = scenario
         else:
-            scenario_path = retro.data.get_file_path(game, scenario + '.json', inttype)
+            scenario_path = retro.data.get_file_path(game, f'{scenario}.json', inttype)
 
         self.system = retro.get_romfile_system(rom_path)
 
@@ -93,7 +93,9 @@ class RetroEnv(gym.Env):
         self.num_buttons = len(self.buttons)
 
         try:
-            assert self.data.load(info_path, scenario_path), 'Failed to load info (%s) or scenario (%s)' % (info_path, scenario_path)
+            assert self.data.load(
+                info_path, scenario_path
+            ), f'Failed to load info ({info_path}) or scenario ({scenario_path})'
         except Exception:
             del self.em
             raise
@@ -112,7 +114,7 @@ class RetroEnv(gym.Env):
         kwargs = {}
         if gym_version >= (0, 9, 6):
             kwargs['dtype'] = np.uint8
-        
+
         if self._obs_type == retro.Observations.RAM:
             shape = self.get_ram().shape
         else:
@@ -144,7 +146,7 @@ class RetroEnv(gym.Env):
             self.img = self.get_screen()
             return self.img
         else:
-            raise ValueError('Unrecognized observation type: {}'.format(self._obs_type))
+            raise ValueError(f'Unrecognized observation type: {self._obs_type}')
 
     def action_to_array(self, a):
         actions = []
@@ -235,12 +237,11 @@ class RetroEnv(gym.Env):
             del self.em
 
     def get_action_meaning(self, act):
-        actions = []
-        for p, action in enumerate(self.action_to_array(act)):
-            actions.append([self.buttons[i] for i in np.extract(action, np.arange(len(action)))])
-        if self.players == 1:
-            return actions[0]
-        return actions
+        actions = [
+            [self.buttons[i] for i in np.extract(action, np.arange(len(action)))]
+            for action in self.action_to_array(act)
+        ]
+        return actions[0] if self.players == 1 else actions
 
     def get_ram(self):
         blocks = []

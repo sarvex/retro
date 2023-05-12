@@ -192,32 +192,21 @@ def load_movie(movie_file):
 
 
 def _play(movie, args, monitor_csv):
-    video_file = None
-    info_file = None
-    npy_file = None
-    if args.lossless in ('png', 'ffv1'):
-        ext = '.mkv'
-    else:
-        ext = '.mp4'
-
+    ext = '.mkv' if args.lossless in ('png', 'ffv1') else '.mp4'
     basename = os.path.splitext(movie)[0]
-    if not args.no_video:
-        video_file = basename + ext
-    if args.info_dict:
-        info_file = basename + '.json'
-    if args.npy_actions:
-        npy_file = basename + '.npz'
+    video_file = basename + ext if not args.no_video else None
+    info_file = f'{basename}.json' if args.info_dict else None
+    npy_file = f'{basename}.npz' if args.npy_actions else None
     while True:
         emulator = None
         try:
             emulator, m, duration = load_movie(movie)
-            if args.ending is not None:
-                if args.ending < 0:
-                    delay = duration + args.ending
-                else:
-                    delay = -(duration + args.ending)
-            else:
+            if args.ending is None:
                 delay = 0
+            elif args.ending < 0:
+                delay = duration + args.ending
+            else:
+                delay = -(duration + args.ending)
             playback_movie(emulator, m, monitor_csv, video_file, info_file, npy_file, args.viewer, delay, args.lossless, not args.no_audio)
             break
         except ConnectionRefusedError:

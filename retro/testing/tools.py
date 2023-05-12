@@ -60,29 +60,31 @@ def verify_data(game, inttype, raw=None):
         return [], [(file, 'missing info')]
     for variable, definition in data.items():
         if 'address' not in definition:
-            errors.append((file, 'missing address for %s' % variable))
+            errors.append((file, f'missing address for {variable}'))
         if 'type' not in definition:
-            errors.append((file, 'missing type for %s' % variable))
-        else:
-            if not re.match(r'\|[dinu]1|(>[<=]?|<[>=]?|=[><]?)[dinu][2-8]', definition['type']):
-                errors.append((file, 'invalid type %s for %s' % (definition['type'], variable)))
-            elif re.match(r'([><=]{2}|=[><]|<[>=]|>[<=])[dinu][2-8]|[><=]{1,2}d[5-8]', definition['type']):
-                warnings.append((file, 'suspicious type %s for %s' % (definition['type'], variable)))
+            errors.append((file, f'missing type for {variable}'))
+        elif not re.match(r'\|[dinu]1|(>[<=]?|<[>=]?|=[><]?)[dinu][2-8]', definition['type']):
+            errors.append((file, f"invalid type {definition['type']} for {variable}"))
+        elif re.match(r'([><=]{2}|=[><]|<[>=]|>[<=])[dinu][2-8]|[><=]{1,2}d[5-8]', definition['type']):
+            warnings.append((file, f"suspicious type {definition['type']} for {variable}"))
     if 'lives' in data and data['lives'].get('type', '') not in ('|u1', '|i1', '|d1'):
-        warnings.append((file, 'suspicious type %s for lives' % data['lives']['type']))
+        warnings.append((file, f"suspicious type {data['lives']['type']} for lives"))
     if 'score' in data and (data['score'].get('type', '??')[1:] in ('u1', 'd1', 'n1', 'n2') or 'i' in data['score'].get('type', '')):
-        warnings.append((file, 'suspicious type %s for score' % data['score']['type']))
+        warnings.append((file, f"suspicious type {data['score']['type']} for score"))
 
     whitelist = {(file, w) for w in whitelist.get('data.json', [])}
-    all_warnings = {(file, w) for (file, w) in warnings}
+    all_warnings = set(warnings)
     warnings = list(all_warnings - whitelist)
-    errors.extend(('metadata.json', 'missing warning "%s: %s"' % (file, w)) for (file, w) in whitelist - all_warnings)
+    errors.extend(
+        ('metadata.json', f'missing warning "{file}: {w}"')
+        for (file, w) in whitelist - all_warnings
+    )
     return warnings, errors
 
 
 def verify_scenario(game, inttype, scenario='scenario', raw=None, dataraw=None):
-    file = os.path.join(str(inttype), game, '%s.json' % scenario)
-    path = retro.data.get_file_path(game, '%s.json' % scenario, inttype)
+    file = os.path.join(str(inttype), game, f'{scenario}.json')
+    path = retro.data.get_file_path(game, f'{scenario}.json', inttype)
     if not path:
         return [], []
     try:
@@ -129,12 +131,12 @@ def verify_scenario(game, inttype, scenario='scenario', raw=None, dataraw=None):
         if reward and 'variables' in reward:
             for variable, definition in reward['variables'].items():
                 if variable not in data:
-                    errors.append((file, 'invalid variable %s' % variable))
+                    errors.append((file, f'invalid variable {variable}'))
                 if not definition:
-                    errors.append((file, 'invalid definition %s' % variable))
+                    errors.append((file, f'invalid definition {variable}'))
                     continue
                 if 'reward' not in definition and 'penalty' not in definition:
-                    errors.append((file, 'blank reward %s' % variable))
+                    errors.append((file, f'blank reward {variable}'))
         if done and 'variables' in done:
             if 'score'in done['variables']:
                 warnings.append((file, 'suspicious variable in done condition: score'))
@@ -146,29 +148,31 @@ def verify_scenario(game, inttype, scenario='scenario', raw=None, dataraw=None):
                 warnings.append((file, 'suspicious done condition any with more than 2 checks'))
             for variable, definition in done['variables'].items():
                 if 'op' not in definition:
-                    errors.append((file, 'invalid done condition %s' % variable))
+                    errors.append((file, f'invalid done condition {variable}'))
                 elif definition.get('reference', 0) == 0:
-                    if 'op' in ('equal', 'negative-equal'):
-                        warnings.append((file, 'incorrect op: zero for %s' % variable))
+                    if 'op' in {'equal', 'negative-equal'}:
+                        warnings.append((file, f'incorrect op: zero for {variable}'))
                     elif 'op' == 'not-equal':
-                        warnings.append((file, 'incorrect op: nonzero for %s' % variable))
+                        warnings.append((file, f'incorrect op: nonzero for {variable}'))
                     elif 'op' == 'less-than':
-                        warnings.append((file, 'incorrect op: negative for %s' % variable))
+                        warnings.append((file, f'incorrect op: negative for {variable}'))
                     elif 'op' == 'greater-than':
-                        warnings.append((file, 'incorrect op: positive for %s' % variable))
+                        warnings.append((file, f'incorrect op: positive for {variable}'))
                 if data:
                     if variable not in data:
-                        errors.append((file, 'invalid variable %s' % variable))
-                    else:
-                        if 'i' not in data[variable].get('type', '') and definition.get('op', '') == 'negative' and definition.get('measurement') != 'delta':
-                            errors.append((file, 'op: negative on unsigned %s' % variable))
+                        errors.append((file, f'invalid variable {variable}'))
+                    elif 'i' not in data[variable].get('type', '') and definition.get('op', '') == 'negative' and definition.get('measurement') != 'delta':
+                        errors.append((file, f'op: negative on unsigned {variable}'))
     except (json.JSONDecodeError, IOError):
         pass
 
     whitelist = {(file, w) for w in whitelist.get(os.path.split(file)[-1], [])}
-    all_warnings = {(file, w) for (file, w) in warnings}
+    all_warnings = set(warnings)
     warnings = list(all_warnings - whitelist)
-    errors.extend(('metadata.json', 'missing warning "%s: %s"' % (file, w)) for (file, w) in whitelist - all_warnings)
+    errors.extend(
+        ('metadata.json', f'missing warning "{file}: {w}"')
+        for (file, w) in whitelist - all_warnings
+    )
     return warnings, errors
 
 
@@ -193,7 +197,7 @@ def verify_default_state(game, inttype, raw=None):
     if not state:
         return [], [(file, 'default state missing')]
     if state not in retro.data.list_states(game, inttype | retro.data.Integrations.STABLE):
-        errors.append((file, 'invalid default state %s' % state))
+        errors.append((file, f'invalid default state {state}'))
 
     return [], errors
 
@@ -212,11 +216,9 @@ def verify_hash_collisions():
             seen = seen_hashes.get(expected_sha, [])
             seen.append(game)
             seen_hashes[expected_sha] = seen
-    for sha, games in seen_hashes.items():
-        if len(games) < 2:
-            continue
-        for game in games:
-            errors.append((game, 'sha duplicate'))
+    for games in seen_hashes.values():
+        if len(games) >= 2:
+            errors.extend((game, 'sha duplicate') for game in games)
     return [], errors
 
 
@@ -228,7 +230,7 @@ def verify_genesis(game, inttype):
 
     rom = retro.data.get_romfile_path(game, inttype=inttype)
     if not rom.endswith('.md'):
-        errors.append((game, 'invalid extension for %s' % rom))
+        errors.append((game, f'invalid extension for {rom}'))
     if 'rom.md' in whitelist:
         return [], []
     with open(rom, 'rb') as f:
@@ -247,11 +249,9 @@ def verify_extension(game, inttype):
     rom = os.path.split(retro.data.get_romfile_path(game, inttype=inttype))[-1]
     platform = retro.data.EMU_EXTENSIONS.get(os.path.splitext(rom)[-1])
 
-    if not platform or not game.endswith('-%s' % platform):
-        errors.append((game, 'invalid extension for %s' % rom))
-    if rom in whitelist:
-        return [], []
-    return warnings, errors
+    if not platform or not game.endswith(f'-{platform}'):
+        errors.append((game, f'invalid extension for {rom}'))
+    return ([], []) if rom in whitelist else (warnings, errors)
 
 
 def verify_rom(game, inttype):

@@ -31,7 +31,7 @@ class Frameskip(gym.Wrapper):
     def step(self, act):
         total_rew = 0.0
         done = None
-        for i in range(self._skip):
+        for _ in range(self._skip):
             obs, rew, done, info = self.env.step(act)
             total_rew += rew
             if done:
@@ -113,11 +113,7 @@ def select_actions(root, action_space, max_episode_steps):
                 ]
                 act = random.choice(best_acts)
 
-            if act in node.children:
-                node = node.children[act]
-            else:
-                node = None
-
+            node = node.children[act] if act in node.children else None
         acts.append(act)
         steps += 1
 
@@ -202,7 +198,7 @@ def brute_retro(
         timesteps += len(acts)
 
         if rew > best_rew:
-            print("new best reward {} => {}".format(best_rew, rew))
+            print(f"new best reward {best_rew} => {rew}")
             best_rew = rew
             env.unwrapped.record_movie("best.bk2")
             env.reset()

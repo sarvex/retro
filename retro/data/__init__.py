@@ -183,8 +183,7 @@ class Variables(object):
 
     def __iter__(self):
         variables = self.data.list_variables()
-        for v in variables.items():
-            yield v
+        yield from variables.items()
 
     def __contains__(self, name):
         variables = self.data.list_variables()
@@ -203,8 +202,7 @@ class SearchListHandle(object):
 
     def __iter__(self):
         searches = self._data.list_searches()
-        for search in searches.items():
-            yield search
+        yield from searches.items()
 
     def __contains__(self, name):
         searches = self._data.list_searches()
@@ -253,7 +251,7 @@ def init_core_info(path):
             for platform, core in EMU_INFO.items():
                 EMU_CORES[platform] = core['lib'] + '_libretro.' + EXT
                 for ext in core['ext']:
-                    EMU_EXTENSIONS['.' + ext] = platform
+                    EMU_EXTENSIONS[f'.{ext}'] = platform
 
 
 def path(hint=DATA_PATH):
@@ -281,28 +279,24 @@ def get_romfile_path(game, inttype=Integrations.DEFAULT):
     Return the path to a given game's romfile
     """
     for extension in EMU_EXTENSIONS.keys():
-        possible_path = get_file_path(game, "rom" + extension, inttype)
-        if possible_path:
+        if possible_path := get_file_path(game, f"rom{extension}", inttype):
             return possible_path
 
-    raise FileNotFoundError("No romfiles found for game: %s" % game)
+    raise FileNotFoundError(f"No romfiles found for game: {game}")
 
 
 def list_games(inttype=Integrations.DEFAULT):
     files = []
     for curpath in inttype.paths:
         files.extend(os.listdir(os.path.join(path(), curpath)))
-    possible_games = []
-    for file in files:
-        if get_file_path(file, "rom.sha", inttype):
-            possible_games.append(file)
+    possible_games = [
+        file for file in files if get_file_path(file, "rom.sha", inttype)
+    ]
     return sorted(set(possible_games))
 
 
 def list_states(game, inttype=Integrations.DEFAULT):
-    paths = []
-    for curpath in inttype.paths:
-        paths.append(os.path.join(path(), curpath, game))
+    paths = [os.path.join(path(), curpath, game) for curpath in inttype.paths]
     states = []
     for curpath in paths:
         local_states = glob.glob(os.path.join(curpath, "*.state"))
@@ -313,9 +307,7 @@ def list_states(game, inttype=Integrations.DEFAULT):
 
 
 def list_scenarios(game, inttype=Integrations.DEFAULT):
-    paths = []
-    for curpath in inttype.paths:
-        paths.append(os.path.join(path(), curpath, game))
+    paths = [os.path.join(path(), curpath, game) for curpath in inttype.paths]
     scens = []
     for curpath in paths:
         local_json = glob.glob(os.path.join(curpath, "*.json"))
@@ -395,7 +387,7 @@ def get_known_hashes():
             except (FileNotFoundError, ValueError):
                 continue
             for ext, platform in EMU_EXTENSIONS.items():
-                if game.endswith('-' + platform):
+                if game.endswith(f'-{platform}'):
                     break
             for sha in shas:
                 known_hashes[sha] = (game, ext, os.path.join(path(), curpath))
@@ -416,7 +408,7 @@ def merge(*args, quiet=True):
             game, ext, curpath = known_hashes[hash]
             if not quiet:
                 print('Importing', game)
-            with open(os.path.join(curpath, game, 'rom%s' % ext), 'wb') as f:
+            with open(os.path.join(curpath, game, f'rom{ext}'), 'wb') as f:
                 f.write(data)
             imported_games += 1
     if not quiet:

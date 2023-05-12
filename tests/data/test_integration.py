@@ -14,7 +14,7 @@ def test_scenario(game):
 
 def test_missing():
     missing = retro.testing.tools.scan_missing()
-    handle([(game, 'missing %s' % file) for (game, file) in missing], [])
+    handle([(game, f'missing {file}') for (game, file) in missing], [])
 
 
 def test_default_states(game):

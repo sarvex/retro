@@ -31,7 +31,7 @@ def main():
         if hash in known_hashes:
             game, ext, curpath = known_hashes[hash]
             print('Importing', game)
-            with open(os.path.join(curpath, game, 'rom%s' % ext), 'wb') as f:
+            with open(os.path.join(curpath, game, f'rom{ext}'), 'wb') as f:
                 f.write(data)
             imported_games += 1
 

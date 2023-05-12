@@ -95,9 +95,7 @@ def openPath(path, mode="r"):
 		flags |= os.O_EXCL
 
 	vf = lib.VFileOpen(path.encode("UTF-8"), flags);
-	if vf == ffi.NULL:
-		return None
-	return VFile(vf)
+	return None if vf == ffi.NULL else VFile(vf)
 
 class VFile:
 	def __init__(self, vf):

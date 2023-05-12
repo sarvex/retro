@@ -17,6 +17,4 @@ def search(core):
         platform = 'GB'
         crc32 = core.crc32
     cls = mgba_gamedata.registry.search(platform, {'crc32': crc32})
-    if not cls:
-        return None
-    return cls(core.memory.u8)
+    return None if not cls else cls(core.memory.u8)
